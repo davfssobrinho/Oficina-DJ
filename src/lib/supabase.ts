@@ -8,16 +8,17 @@ export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
   supabaseAnonKey && 
   supabaseUrl !== 'https://your-project-url.supabase.co' &&
-  !supabaseUrl.includes('placeholder')
+  !supabaseUrl.includes('placeholder') &&
+  supabaseUrl.startsWith('http')
 );
 
 if (!isSupabaseConfigured) {
-  console.error('Supabase configuration is missing or invalid. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.');
+  console.warn('Supabase configuration is missing or invalid. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.');
 }
 
-// Use a placeholder if missing to avoid immediate crash during initialization, 
-// but we will handle the UI state in App.tsx
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
-);
+// Ensure we always pass a valid-looking URL to createClient to avoid immediate crash,
+// even if it's just a placeholder. The App.tsx will handle the non-configured state.
+const validUrl = isSupabaseConfigured ? supabaseUrl : 'https://placeholder-project.supabase.co';
+const validKey = isSupabaseConfigured ? supabaseAnonKey : 'placeholder-key';
+
+export const supabase = createClient(validUrl, validKey);
