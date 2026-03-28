@@ -4,12 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { UserProfile, Couple } from './types';
 import { Auth } from './components/Auth';
 import { CoupleSetup } from './components/CoupleSetup';
 import { Dashboard } from './components/Dashboard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -17,6 +17,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -102,6 +107,31 @@ export default function App() {
       setLoading(false);
     }
   };
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-brand-dark flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 text-center">
+          <div className="bg-brand-purple/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-brand-purple" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-4">Configuração Necessária</h1>
+          <p className="text-gray-300 mb-6">
+            Para que o aplicativo funcione, você precisa configurar as variáveis de ambiente do Supabase no menu <strong>Settings &gt; Secrets</strong>:
+          </p>
+          <div className="bg-black/30 rounded-lg p-4 mb-6 text-left font-mono text-sm">
+            <div className="text-brand-purple mb-2">VITE_SUPABASE_URL</div>
+            <div className="text-gray-400 mb-4">https://xyz.supabase.co</div>
+            <div className="text-brand-purple mb-2">VITE_SUPABASE_ANON_KEY</div>
+            <div className="text-gray-400">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</div>
+          </div>
+          <p className="text-xs text-gray-400">
+            Após configurar as chaves, reinicie o servidor ou atualize a página.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
